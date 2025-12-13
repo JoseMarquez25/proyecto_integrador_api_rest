@@ -27,23 +27,23 @@ class VideoService(
         mapper.toResponse(videoRepo.findById(id).orElseThrow { Exception("Video no encontrado") })
 
     fun updateVideo(id: Long, req: UpdateVideoRequest): VideoResponse {
-        val video = videoRepo.findById(id).orElseThrow { Exception("Video no encontrado") }
+        val video = videoRepo.findById(id)
+            .orElseThrow { RuntimeException("Video no encontrado") }
 
-        val updated = video.copy(
-            title = req.title ?: video.title,
-            shortDescription = req.shortDescription ?: video.shortDescription,
-            description = req.description ?: video.description,
-            videoFile = req.videoFile ?: video.videoFile,
-            documentation = req.documentation ?: video.documentation,
-            instructor = req.instructor ?: video.instructor,
-            level = req.level ?: video.level,
-            durationType = req.durationType ?: video.durationType,
-            isActive = req.isActive ?: video.isActive,
-            updatedAt = java.time.LocalDateTime.now()
-        )
+        req.title?.let { video.title = it }
+        req.shortDescription?.let { video.shortDescription = it }
+        req.description?.let { video.description = it }
+        req.videoFile?.let { video.videoFile = it }
+        req.documentation?.let { video.documentation = it }
+        req.instructor?.let { video.instructor = it }
+        req.level?.let { video.level = it }
+        req.durationType?.let { video.durationType = it }
+        req.isActive?.let { video.isActive = it }
 
-        return mapper.toResponse(videoRepo.save(updated))
+        // updatedAt se actualiza automáticamente con @PreUpdate
+        return mapper.toResponse(videoRepo.save(video))
     }
+
 
     fun deleteVideo(id: Long) {
         if (!videoRepo.existsById(id)) {

@@ -1,40 +1,32 @@
 package com.proyecto_integrador.models.entities
 
 import jakarta.persistence.*
-import java.time.LocalDateTime
 
 @Entity
 @Table(name = "videos")
-data class VideoEntity(
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long = 0,
+class VideoEntity(
 
-    val title: String,
+    var title: String,
 
     @Column(name = "short_description")
-    val shortDescription: String? = null,
+    var shortDescription: String? = null,
 
-    val description: String? = null,
+    var description: String? = null,
 
     @Column(name = "video_file")
-    val videoFile: String,
+    var videoFile: String,
 
-    val documentation: String? = null,
+    var documentation: String? = null,
 
-    val instructor: Long = 1, // ID numérico del instructor (luego se mapeará con FK real)
+    var instructor: Long = 1,
 
-    val level: String = "nivel1",
+    var level: String = "nivel1",
 
     @Column(name = "duration_type")
-    val durationType: String = "medium",
+    var durationType: String = "medium",
 
     @Column(name = "is_active")
-    val isActive: Boolean = true,
+    var isActive: Boolean = true
 
-    @Column(name = "created_at")
-    val createdAt: LocalDateTime = LocalDateTime.now(),
+) : BaseEntity()
 
-    @Column(name = "updated_at")
-    val updatedAt: LocalDateTime = LocalDateTime.now()
-)
