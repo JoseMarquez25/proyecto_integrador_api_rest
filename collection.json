@@ -1,0 +1,67 @@
+{
+  "info": {
+    "name": "AD MOBILE API - Videos",
+    "_postman_id": "admobile-videos-crud",
+    "description": "Colección para probar el CRUD de Videos en la API Spring Boot con H2",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Crear Video",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"title\": \"Video de prueba\",\n    \"shortDescription\": \"Descripción corta\",\n    \"description\": \"Descripción completa del video\",\n    \"videoFile\": \"video_prueba.mp4\",\n    \"documentation\": \"Documentación adicional\",\n    \"instructor\": 1,\n    \"level\": \"nivel1\",\n    \"durationType\": \"medium\",\n    \"isActive\": true\n}"
+        },
+        "url": { "raw": "http://localhost:8080/api/videos", "protocol": "http", "host": ["localhost"], "port": "8080", "path": ["api", "videos"] }
+      },
+      "response": []
+    },
+    {
+      "name": "Obtener todos los videos",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "http://localhost:8080/api/videos", "protocol": "http", "host": ["localhost"], "port": "8080", "path": ["api", "videos"] }
+      },
+      "response": []
+    },
+    {
+      "name": "Obtener video por ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "http://localhost:8080/api/videos/1", "protocol": "http", "host": ["localhost"], "port": "8080", "path": ["api", "videos", "1"] }
+      },
+      "response": []
+    },
+    {
+      "name": "Actualizar Video",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"title\": \"Video actualizado\",\n    \"shortDescription\": \"Nueva descripción corta\",\n    \"description\": \"Descripción actualizada\",\n    \"videoFile\": \"video_actualizado.mp4\",\n    \"documentation\": \"Documentación actualizada\",\n    \"instructor\": 1,\n    \"level\": \"nivel2\",\n    \"durationType\": \"long\",\n    \"isActive\": true\n}"
+        },
+        "url": { "raw": "http://localhost:8080/api/videos/1", "protocol": "http", "host": ["localhost"], "port": "8080", "path": ["api", "videos", "1"] }
+      },
+      "response": []
+    },
+    {
+      "name": "Eliminar Video",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": { "raw": "http://localhost:8080/api/videos/1", "protocol": "http", "host": ["localhost"], "port": "8080", "path": ["api", "videos", "1"] }
+      },
+      "response": []
+    }
+  ]
+}
