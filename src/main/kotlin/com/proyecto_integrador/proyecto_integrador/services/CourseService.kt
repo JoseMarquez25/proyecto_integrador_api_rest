@@ -56,6 +56,14 @@ class CourseService(
         val existing = courseRepository.findByIdOrNull(id)
             ?: throw CourseNotFoundException(id)
 
+        // Validación de slug duplicado
+        if (req.slug != null) {
+            val found = courseRepository.findBySlug(req.slug)
+            if (found.isPresent && found.get().id != existing.id) {
+                throw CourseSlugAlreadyExistsException(req.slug)
+            }
+        }
+
         val instructors = req.instructorIds?.let { userRepository.findAllById(it) }
         val students = req.studentIds?.let { userRepository.findAllById(it) }
         val videos = req.videoIds?.let { videoRepository.findAllById(it) }
@@ -66,6 +74,7 @@ class CourseService(
         val saved = courseRepository.save(updatedEntity)
         return mapper.toResponse(saved)
     }
+
 
     fun delete(id: Long) {
         val existing = courseRepository.findByIdOrNull(id)

@@ -116,6 +116,25 @@ class VideoServiceTest {
         }
     }
 
+    @Test
+    fun `save should throw IllegalArgumentException when durationType is blank`() {
+        val request = CreateVideoRequest(
+            title = "Video Kotlin",
+            shortDescription = "Intro a Kotlin",
+            description = "Curso básico de Kotlin",
+            documentation = "http://docs.com/kotlin",
+            youtubeUrl = "http://youtube.com/1",
+            instrumentId = 1L,
+            instructorId = 1L,
+            level = "beginner",
+            durationType = "", // durationType vacío -> debe lanzar
+            isActive = true
+        )
+
+        assertThrows(IllegalArgumentException::class.java) {
+            videoService.save(request)
+        }
+    }
 
     @Test
     fun `save should persist and return video`() {
@@ -153,7 +172,6 @@ class VideoServiceTest {
         assertEquals("Video Kotlin", result.title)
     }
 
-
     @Test
     fun `update should throw VideoNotFoundException when video not exists`() {
         val request = UpdateVideoRequest(title = "Nuevo título")
@@ -184,6 +202,24 @@ class VideoServiceTest {
     }
 
     @Test
+    fun `update should throw IllegalArgumentException when durationType is blank`() {
+        val existing = VideoEntity(
+            title = "Video Kotlin",
+            youtubeUrl = "http://youtube.com/1",
+            level = "beginner",
+            durationType = "short"
+        ).apply { id = 1L }
+
+        val request = UpdateVideoRequest(durationType = "")
+
+        `when`(videoRepository.findById(1L)).thenReturn(Optional.of(existing))
+
+        assertThrows(IllegalArgumentException::class.java) {
+            videoService.update(1L, request)
+        }
+    }
+
+    @Test
     fun `update should persist and return updated video`() {
         val existing = VideoEntity(
             title = "Video Kotlin",
@@ -202,6 +238,50 @@ class VideoServiceTest {
 
         assertEquals("Nuevo título", result.title)
         assertEquals("http://youtube.com/new", result.youtubeUrl)
+    }
+
+    @Test
+    fun `update should update all optional fields`() {
+        val existing = VideoEntity(
+            title = "Video Kotlin",
+            youtubeUrl = "http://youtube.com/1",
+            level = "beginner",
+            durationType = "short",
+            shortDescription = null,
+            description = null,
+            documentation = null,
+            instrumentId = null,
+            instructorId = 1L,
+            isActive = true
+        ).apply { id = 1L }
+
+        val request = UpdateVideoRequest(
+            shortDescription = "Nueva descripción corta",
+            description = "Nueva descripción",
+            documentation = "http://docs.com/new",
+            instrumentId = 2L,
+            instructorId = 3L,
+            durationType = "long",
+            isActive = false
+        )
+
+        `when`(videoRepository.findById(1L)).thenReturn(Optional.of(existing))
+        `when`(videoRepository.save(any(VideoEntity::class.java)))
+            .thenAnswer { invocation ->
+                val arg = invocation.arguments[0] as VideoEntity
+                // Simulate repository returning the updated entity
+                arg.apply { id = 1L }
+            }
+
+        val result = videoService.update(1L, request)
+
+        assertEquals("Nueva descripción corta", result.shortDescription)
+        assertEquals("Nueva descripción", result.description)
+        assertEquals("http://docs.com/new", result.documentation)
+        assertEquals(2L, result.instrumentId)
+        assertEquals(3L, result.instructorId)
+        assertEquals("long", result.durationType)
+        assertFalse(result.isActive)
     }
 
     @Test

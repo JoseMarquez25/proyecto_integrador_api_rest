@@ -1,13 +1,13 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/Diatonic_Academy
+    url: jdbc:postgresql://localhost:5433/Diatonic_Academy
     driver-class-name: org.postgresql.Driver
-    username: "Jose Miguel"
+    username: "JoseMiguel"
     password: "JMmf1996"
 
   jpa:
     hibernate:
-      ddl-auto: validate   # cuidado: update modifica el esquema automáticamente
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:

@@ -73,9 +73,9 @@ class CourseServiceTest {
         val request = CreateCourseRequest(
             title = "Curso Kotlin",
             slug = "curso-kotlin",
-            instructorIds = listOf(),
-            studentIds = listOf(),
-            videoIds = listOf()
+            instructorIds = listOf(1L),
+            studentIds = listOf(2L),
+            videoIds = listOf(3L)
         )
 
         `when`(courseRepository.findBySlug("curso-kotlin"))
@@ -104,18 +104,21 @@ class CourseServiceTest {
     }
 
     @Test
-    fun `save should persist and return course`() {
+    fun `save should persist and return course including optional relations`() {
         val request = CreateCourseRequest(
             title = "Curso Kotlin",
             slug = "curso-kotlin",
-            instructorIds = listOf(),
-            studentIds = listOf(),
-            videoIds = listOf()
+            instructorIds = listOf(10L),
+            studentIds = listOf(20L),
+            videoIds = listOf(30L)
         )
 
         val savedEntity = CourseEntity(title = "Curso Kotlin", slug = "curso-kotlin").apply { id = 1L }
 
         `when`(courseRepository.findBySlug("curso-kotlin")).thenReturn(Optional.empty())
+        // Ensure the optional relation lookups are executed (return empty lists is fine)
+        `when`(userRepository.findAllById(anyList())).thenReturn(listOf())
+        `when`(videoRepository.findAllById(anyList())).thenReturn(listOf())
         `when`(courseRepository.save(any(CourseEntity::class.java))).thenReturn(savedEntity)
 
         val result = courseService.save(request)
@@ -136,7 +139,76 @@ class CourseServiceTest {
     }
 
     @Test
-    fun `update should persist and return updated course`() {
+    fun `update should throw IllegalArgumentException when existing course slug is blank`() {
+        // Simulate an existing course with blank slug to hit the branch that throws
+        val existing = CourseEntity(title = "Curso X", slug = "").apply { id = 1L }
+        val request = UpdateCourseRequest(title = "Nuevo título")
+
+        `when`(courseRepository.findById(1L)).thenReturn(Optional.of(existing))
+
+        assertThrows(IllegalArgumentException::class.java) {
+            courseService.update(1L, request)
+        }
+    }
+
+    @Test
+    fun `update should throw CourseSlugAlreadyExistsException when new slug already exists`() {
+        val existing = CourseEntity(title = "Curso Kotlin", slug = "curso-kotlin").apply { id = 1L }
+        val request = UpdateCourseRequest(slug = "curso-duplicado")
+
+        `when`(courseRepository.findById(1L)).thenReturn(Optional.of(existing))
+
+        // Simulamos que ya existe otro curso con el slug "curso-duplicado" y con id distinto (2L)
+        val other = CourseEntity(title = "Otro Curso", slug = "curso-duplicado").apply { id = 2L }
+        `when`(courseRepository.findBySlug("curso-duplicado")).thenReturn(Optional.of(other))
+
+        // Stub de seguridad para save: si por error se llama, que devuelva la entidad pasada
+        `when`(courseRepository.save(any(CourseEntity::class.java)))
+            .thenAnswer { invocation -> invocation.arguments[0] as CourseEntity }
+
+        // Ejecutamos y esperamos la excepción
+        assertThrows(CourseSlugAlreadyExistsException::class.java) {
+            courseService.update(1L, request)
+        }
+
+        // Aseguramos que no se intentó persistir
+        verify(courseRepository, never()).save(any(CourseEntity::class.java))
+    }
+
+
+
+    @Test
+    fun `update should persist and return updated course when optional lists and slug provided`() {
+        val existing = CourseEntity(title = "Curso Kotlin", slug = "curso-kotlin").apply { id = 1L }
+
+        val request = UpdateCourseRequest(
+            title = "Curso Kotlin Avanzado",
+            slug = "curso-kotlin-avanzado",
+            instructorIds = listOf(11L, 12L),
+            studentIds = listOf(21L),
+            videoIds = listOf(31L, 32L)
+        )
+
+        `when`(courseRepository.findById(1L)).thenReturn(Optional.of(existing))
+        // new slug does not exist
+        `when`(courseRepository.findBySlug("curso-kotlin-avanzado")).thenReturn(Optional.empty())
+        // ensure optional lookups are executed; return empty lists to simulate found entities
+        `when`(userRepository.findAllById(anyList())).thenReturn(listOf())
+        `when`(videoRepository.findAllById(anyList())).thenReturn(listOf())
+        `when`(courseRepository.save(any(CourseEntity::class.java))).thenAnswer { invocation ->
+            val arg = invocation.arguments[0] as CourseEntity
+            arg.apply { id = 1L }
+        }
+
+        val result = courseService.update(1L, request)
+
+        assertEquals(1L, result.id)
+        assertEquals("Curso Kotlin Avanzado", result.title)
+        assertEquals("curso-kotlin-avanzado", result.slug)
+    }
+
+    @Test
+    fun `update should persist and return updated course when only title provided`() {
         val existing = CourseEntity(title = "Curso Kotlin", slug = "curso-kotlin").apply { id = 1L }
         val request = UpdateCourseRequest(title = "Nuevo título")
 
@@ -147,6 +219,53 @@ class CourseServiceTest {
 
         assertEquals("Nuevo título", result.title)
     }
+
+    @Test
+    fun `update should allow slug change when new slug does not exist`() {
+        val existing = CourseEntity(title = "Curso Kotlin", slug = "curso-kotlin").apply { id = 1L }
+        val request = UpdateCourseRequest(slug = "curso-nuevo")
+
+        `when`(courseRepository.findById(1L)).thenReturn(Optional.of(existing))
+        `when`(courseRepository.findBySlug("curso-nuevo")).thenReturn(Optional.empty())
+        `when`(courseRepository.save(any(CourseEntity::class.java)))
+            .thenAnswer { invocation -> (invocation.arguments[0] as CourseEntity).apply { id = 1L } }
+
+        val result = courseService.update(1L, request)
+
+        assertEquals("curso-nuevo", result.slug)
+    }
+
+    @Test
+    fun `update should allow slug when found course has same id`() {
+        val existing = CourseEntity(title = "Curso Kotlin", slug = "curso-kotlin").apply { id = 1L }
+        val request = UpdateCourseRequest(slug = "curso-kotlin")
+
+        `when`(courseRepository.findById(1L)).thenReturn(Optional.of(existing))
+        // Simulamos que el repositorio devuelve el mismo curso
+        `when`(courseRepository.findBySlug("curso-kotlin")).thenReturn(Optional.of(existing))
+        `when`(courseRepository.save(any(CourseEntity::class.java)))
+            .thenAnswer { invocation -> (invocation.arguments[0] as CourseEntity).apply { id = 1L } }
+
+        val result = courseService.update(1L, request)
+
+        assertEquals("curso-kotlin", result.slug)
+    }
+
+    @Test
+    fun `update should allow when slug is null`() {
+        val existing = CourseEntity(title = "Curso Kotlin", slug = "curso-kotlin").apply { id = 1L }
+        val request = UpdateCourseRequest(title = "Nuevo título", slug = null)
+
+        `when`(courseRepository.findById(1L)).thenReturn(Optional.of(existing))
+        `when`(courseRepository.save(any(CourseEntity::class.java)))
+            .thenAnswer { invocation -> (invocation.arguments[0] as CourseEntity).apply { id = 1L } }
+
+        val result = courseService.update(1L, request)
+
+        assertEquals("Nuevo título", result.title)
+    }
+
+
 
     @Test
     fun `delete should throw CourseNotFoundException when course not exists`() {
@@ -179,4 +298,21 @@ class CourseServiceTest {
 
         verify(courseRepository, times(1)).delete(course)
     }
+
+    @Test
+    fun `update should work when slug is null`() {
+        val existing = CourseEntity(title = "Curso Kotlin", slug = "curso-kotlin").apply { id = 1L }
+        val request = UpdateCourseRequest(title = "Nuevo título", slug = null)
+
+        `when`(courseRepository.findById(1L)).thenReturn(Optional.of(existing))
+        `when`(courseRepository.save(any(CourseEntity::class.java)))
+            .thenAnswer { invocation -> (invocation.arguments[0] as CourseEntity).apply { id = 1L } }
+
+        val result = courseService.update(1L, request)
+
+        assertEquals("Nuevo título", result.title)
+        assertEquals("curso-kotlin", result.slug) // el slug original se mantiene
+    }
+
 }
+
