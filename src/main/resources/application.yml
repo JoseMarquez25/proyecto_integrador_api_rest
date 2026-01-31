@@ -1,17 +1,17 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:admobile
-    driver-class-name: org.h2.Driver
-    username: admin
-    password: admin
+    url: jdbc:postgresql://localhost:5432/Diatonic_Academy
+    driver-class-name: org.postgresql.Driver
+    username: "Jose Miguel"
+    password: "JMmf1996"
+
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate   # cuidado: update modifica el esquema automáticamente
     show-sql: true
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
 server:
   port: 8080

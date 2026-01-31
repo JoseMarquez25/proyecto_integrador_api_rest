@@ -12,9 +12,10 @@ class VideoMapper {
             title = req.title,
             shortDescription = req.shortDescription,
             description = req.description,
-            videoFile = req.videoFile,
             documentation = req.documentation,
-            instructor = req.instructor,
+            youtubeUrl = req.youtubeUrl,
+            instrumentId = req.instrumentId,
+            instructorId = req.instructorId,
             level = req.level,
             durationType = req.durationType,
             isActive = req.isActive
@@ -22,13 +23,14 @@ class VideoMapper {
 
     fun toResponse(entity: VideoEntity): VideoResponse =
         VideoResponse(
-            id = entity.id,
+            id = entity.id!!,
             title = entity.title,
             shortDescription = entity.shortDescription,
             description = entity.description,
-            videoFile = entity.videoFile,
             documentation = entity.documentation,
-            instructor = entity.instructor,
+            youtubeUrl = entity.youtubeUrl,
+            instrumentId = entity.instrumentId,
+            instructorId = entity.instructorId,
             level = entity.level,
             durationType = entity.durationType,
             isActive = entity.isActive,
@@ -36,3 +38,4 @@ class VideoMapper {
             updatedAt = entity.updatedAt
         )
 }
+

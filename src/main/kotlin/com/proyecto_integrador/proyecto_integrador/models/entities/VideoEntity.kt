@@ -3,7 +3,7 @@ package com.proyecto_integrador.models.entities
 import jakarta.persistence.*
 
 @Entity
-@Table(name = "videos")
+@Table(name = "academy_video")
 class VideoEntity(
 
     var title: String,
@@ -13,12 +13,17 @@ class VideoEntity(
 
     var description: String? = null,
 
-    @Column(name = "video_file")
-    var videoFile: String,
-
     var documentation: String? = null,
 
-    var instructor: Long = 1,
+    @Column(name = "youtube_url")
+    var youtubeUrl: String,   // reemplaza videoFile por youtubeUrl
+
+    // Relaciones
+    @Column(name = "instrument_id")
+    var instrumentId: Long? = null,   // relación con Instrument (nullable)
+
+    @Column(name = "instructor_id")
+    var instructorId: Long = 1,       // relación con User
 
     var level: String = "nivel1",
 
@@ -29,4 +34,3 @@ class VideoEntity(
     var isActive: Boolean = true
 
 ) : BaseEntity()
-

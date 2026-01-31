@@ -8,7 +8,7 @@ abstract class BaseEntity(
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    open val id: Long = 0,
+    open var id: Long? = null,   // ahora mutable y nullable
 
     @Column(name = "created_at", nullable = false, updatable = false)
     open val createdAt: LocalDateTime = LocalDateTime.now(),
@@ -22,4 +22,5 @@ abstract class BaseEntity(
         updatedAt = LocalDateTime.now()
     }
 }
+
 
